@@ -23,8 +23,6 @@ func (c *Checker) AllPods(ctx context.Context, namespace string, timeout time.Du
 		return nil, fmt.Errorf("error listing pods: %w", err)
 	}
 
-	// Check all pods, ignoring not found errors as pods may be
-	// deleted between initial list and check.
 	return c.checkPods(ctx, timeout, podList.Items...)
 }
 
@@ -55,8 +53,8 @@ func (c *Checker) checkPods(ctx context.Context, timeout time.Duration, pods ...
 		res, err := c.checkPod(ctx, pod, timeout)
 		if err != nil && err != evictor.ErrNotFound {
 			// Unexpected error that is not a 404.
-			// We swallow 404 errors as pod did exist prior to calling function,
-			// so it was most likely deleted between initial get/list & checking.
+			// We swallow 404 errors as we do a get/list before calling this function,
+			// so the pod was most likely deleted between initial get/list & checking.
 			return nil, fmt.Errorf("error checking eligibility of pod %s/%s for eviction: %w", pod.Namespace, pod.Name, err)
 		} else if res != nil {
 			// No unexpected errors but pod cannot be evicted, so

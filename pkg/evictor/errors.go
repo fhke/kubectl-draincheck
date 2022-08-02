@@ -7,7 +7,6 @@ import (
 )
 
 var (
-	// TODO - replace these error types with our internal error
 	ErrTooManyPDBs   error = errors.New("multiple pod disruption budgets are acting on the same pod")
 	ErrNoDisruptions error = errors.New("pod disruption budget allows no disruptions")
 	ErrNotFound      error = errors.New("pod not found")
