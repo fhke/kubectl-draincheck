@@ -12,11 +12,8 @@ type (
 		e evictor.Evictor      // pod dry run evictor
 	}
 	Result struct {
-		Reason error `json:"reason"`
-		Pod corev1.Pod `json:"pod"`
+		Reason error      `json:"reason"`
+		Pod    corev1.Pod `json:"pod"`
 	}
 	Results []Result
-	Reason  struct {
-		error
-	}
 )
