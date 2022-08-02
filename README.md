@@ -15,7 +15,7 @@ This can make cluster maintenance difficult as manual intervention is required t
 
 ## How do I use it?
 
-To install the tool, run `kubectl install github.com/fhke/kubectl-draincheck`. Once it has been installed, you can use it as follows:
+To install the tool, run `go install github.com/fhke/kubectl-draincheck`. Once it has been installed, you can use it as follows:
 
 ### Check all pods in a cluster
 
