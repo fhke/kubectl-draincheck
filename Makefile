@@ -4,6 +4,9 @@ IMAGE_TAG  ?= $(shell cat ./VERSION)
 IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
 IMAGE_LATEST = $(IMAGE_NAME):latest
 
+GO_VERSION ?= 1.18
+GO_IMAGE ?= golang
+
 .DEFAULT_GOAL = help
 
 .PHONY: help
@@ -12,9 +15,13 @@ help: ## Display help message
 
 .PHONY: build
 build: ## Build docker image
-	docker build -t $(IMAGE) -t $(IMAGE_LATEST) .
+	docker build --build-arg 'GO_IMAGE=$(GO_IMAGE)' --build-arg 'GO_VERSION=$(GO_VERSION)' -t $(IMAGE) -t $(IMAGE_LATEST) .
 
 .PHONY: publish
 publish: build ## Build docker image & push to remote repo
 	docker push $(IMAGE)
 	docker push $(IMAGE_LATEST)
+
+.PHONY: test
+test: ## Run tests
+	go test -v ./...

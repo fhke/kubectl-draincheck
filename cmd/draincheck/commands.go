@@ -24,6 +24,7 @@ func NewCmd() *cobra.Command {
 		namespace, kubeconfig, output *string
 		allNamespaces                 *bool
 		timeout                       *time.Duration
+		workers                       *uint
 	)
 
 	cmd := &cobra.Command{
@@ -49,24 +50,31 @@ func NewCmd() *cobra.Command {
 				log.Panicw("Error getting clientset", "error", err)
 			}
 
-			// create eviction checker
-			ch := checker.NewChecker(cs)
-
 			// create parent context
 			ctx := context.Background()
+
+			// create eviction checker
+			ctx2, can := context.WithTimeout(ctx, *timeout)
+			ch, err := checker.NewChecker(ctx2, cs)
+			if err != nil {
+				can()
+				log.Panicw("Error creating checker", "error", err)
+			}
+			defer ch.Stop()
+			can()
 
 			var res checker.Results
 
 			if len(pods) > 0 {
 				// check by name
-				res, err = ch.PodsByName(ctx, *timeout, *namespace, pods...)
+				res, err = ch.PodsByName(ctx, *timeout, *namespace, *workers, pods...)
 			} else {
 				// check all in namespace/cluster
 				var ns string
 				if !*allNamespaces {
 					ns = *namespace
 				}
-				res, err = ch.AllPods(ctx, ns, *timeout)
+				res, err = ch.AllPods(ctx, ns, *timeout, *workers)
 			}
 
 			if err != nil {
@@ -94,6 +102,7 @@ func NewCmd() *cobra.Command {
 	allNamespaces = cmd.Flags().BoolP("all-namespaces", "A", false, "Check pods in all namespaces")
 	timeout = cmd.Flags().DurationP("api-timeout", "T", time.Second*30, "Timeout for calls to Kubernetes API server")
 	output = cmd.Flags().StringP("output", "o", OutputText, "Output format - yaml, json or text")
+	workers = cmd.Flags().UintP("workers", "W", 10, "Number of worker goroutines to run")
 
 	return cmd
 }
