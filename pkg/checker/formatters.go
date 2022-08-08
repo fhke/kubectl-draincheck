@@ -3,6 +3,7 @@ package checker
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	"github.com/fhke/kubectl-draincheck/pkg/checker/errors"
 	"github.com/olekukonko/tablewriter"
@@ -27,12 +28,17 @@ func (r Results) Table() []byte {
 
 	// Prepare table
 	tbl := tablewriter.NewWriter(buf)
-	tbl.SetHeader([]string{"namespace", "pod", "reason"})
+	tbl.SetHeader([]string{"namespace", "pod", "reason", "pod disruption budgets"})
 	tbl.SetAutoWrapText(false)
 
 	// Load table with data
 	for _, res := range r {
-		tbl.Append([]string{res.Pod.Namespace, res.Pod.Name, res.Reason.Error()})
+		tbl.Append([]string{
+			res.Pod.Namespace,
+			res.Pod.Name,
+			res.Reason.Error(),
+			res.pdbNames(),
+		})
 	}
 
 	// render table
@@ -59,4 +65,15 @@ func (r Results) marshalPrepare() Results {
 	}
 
 	return out
+}
+
+// Get comma-separated names of pod disruption budgets affecting pod
+func (r Result) pdbNames() string {
+	names := make([]string, len(r.PodDisruptionBudgets))
+
+	for i, pdb := range r.PodDisruptionBudgets {
+		names[i] = pdb.Name
+	}
+
+	return strings.Join(names, ", ")
 }

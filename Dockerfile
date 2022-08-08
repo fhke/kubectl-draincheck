@@ -1,5 +1,9 @@
+# Go version argument
+ARG GO_VERSION
+ARG GO_IMAGE=golang
+
 # Build image
-FROM golang:1.18 AS builder
+FROM ${GO_IMAGE}:${GO_VERSION} AS builder
 
 WORKDIR /var/tmp/build
 
