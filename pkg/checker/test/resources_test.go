@@ -109,6 +109,40 @@ func createResources(t *testing.T) []expected {
 		},
 	)
 
+	// create unmanaged pod without any pdbs
+	_, err = clientset.CoreV1().Pods("default").Create(
+		context.TODO(),
+		&corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "unmanaged-2",
+				Namespace: "default",
+				Labels: map[string]string{
+					"test-id": "unmanaged-2",
+				},
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "pause",
+						Image: "google/pause:asm",
+					},
+				},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	require.NoError(t, err, "Creating pod should not return error")
+
+	ret = append(
+		ret,
+		expected{
+			podName:   "unmanaged-2",
+			namespace: "default",
+			pdbNames:  []string{},
+			reason:    "pod has no owner references",
+		},
+	)
+
 	return ret
 }
 

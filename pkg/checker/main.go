@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -110,7 +111,10 @@ func (c *Checker) checkPod(ctx context.Context, pod corev1.Pod, timeout time.Dur
 		defer can()
 		pdbs, err := c.pdbLocator.PDBsForPod(ctx2, &pod)
 		if err != nil {
-			return nil, fmt.Errorf("error locating pod disruption budgets for pod: %w", err)
+			if !strings.HasPrefix(err.Error(), fmt.Sprintf("could not find PodDisruptionBudget for pod %s in namespace %s with labels: ", pod.Name, pod.Namespace)) {
+				// Don't return error if there are no PDBs affecting pod. The lister doesn't use error wrapping so we need to use string matching here
+				return nil, fmt.Errorf("error locating pod disruption budgets for pod: %w", err)
+			}
 		}
 
 		return &Result{
