@@ -7,6 +7,7 @@ import (
 
 	"github.com/fhke/kubectl-draincheck/pkg/checker/errors"
 	"github.com/olekukonko/tablewriter"
+	v1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/yaml"
 )
@@ -57,11 +58,10 @@ func (r Results) marshalPrepare() Results {
 		out[i] = r[i]
 		// set error type to internal error
 		out[i].Reason = errors.For(out[i].Reason)
-		// strip managed fields
-		ac, err := meta.Accessor(&out[i].Pod)
-		if err == nil {
-			ac.SetManagedFields(nil)
-		}
+		// strip managed fields for pod
+		removeManagedFields(&out[i].Pod)
+		// copy & strip managed fields for pod disruption budgets
+		out[i].PodDisruptionBudgets = removeManagedFieldsPDBSlice(r[i].PodDisruptionBudgets)
 	}
 
 	return out
@@ -76,4 +76,24 @@ func (r Result) pdbNames() string {
 	}
 
 	return strings.Join(names, ", ")
+}
+
+// remove managed fields from a kubernetes object
+func removeManagedFields(in interface{}) {
+	ac, err := meta.Accessor(in)
+	if err == nil {
+		ac.SetManagedFields(nil)
+	}
+}
+
+// deep copy a slice of pod disruption budgets, removing managed fields
+func removeManagedFieldsPDBSlice(in []*v1.PodDisruptionBudget) []*v1.PodDisruptionBudget {
+	out := make([]*v1.PodDisruptionBudget, len(in))
+
+	for i := range in {
+		out[i] = in[i].DeepCopy()
+		removeManagedFields(out[i])
+	}
+
+	return out
 }

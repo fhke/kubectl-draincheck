@@ -1,7 +1,7 @@
 IMAGE_NAME ?= quay.io/fhke97/kubectl-draincheck
-IMAGE_TAG  ?= $(shell cat ./VERSION)
+VERSION  ?= $(shell cat ./VERSION)
 
-IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
+IMAGE = $(IMAGE_NAME):$(VERSION)
 IMAGE_LATEST = $(IMAGE_NAME):latest
 
 GO_VERSION ?= 1.18
@@ -21,6 +21,11 @@ build: ## Build docker image
 publish: build ## Build docker image & push to remote repo
 	docker push $(IMAGE)
 	docker push $(IMAGE_LATEST)
+
+.PHONY: tag_release
+tag_release: ## Create a git tag for the current release
+	git tag $(VERSION)
+
 
 .PHONY: test
 test: ## Run tests
