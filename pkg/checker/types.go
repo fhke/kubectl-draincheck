@@ -15,9 +15,9 @@ type (
 		pdbLocator *locator.PDBLocator
 	}
 	Result struct {
-		Reason               error      `json:"reason"`
-		Pod                  corev1.Pod `json:"pod"`
-		PodDisruptionBudgets []*policyv1.PodDisruptionBudget
+		Reason               error                           `json:"reason"`
+		Pod                  corev1.Pod                      `json:"pod"`
+		PodDisruptionBudgets []*policyv1.PodDisruptionBudget `json:"podDisruptionBudgets"`
 	}
 	Results []Result
 )
